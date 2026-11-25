@@ -1,45 +1,34 @@
-# Real Estate Lead Management — System Architecture
+# System Architecture
 
-This document presents one end-to-end architecture for deploying the AI Lead Management System with a real estate agency. It maps the existing automation pattern to property-buyer and renter inquiries. Property-specific form fields and client integrations are configured during each agency's onboarding.
+This document explains the complete lead-management workflow, from the first customer submission to each possible outcome. The diagram separates the common processing stages from the COLD and human-approval routes so the decisions and connections are easy to trace.
 
-## Complete Lead Journey
+## End-to-End Workflow
 
 ```mermaid
 flowchart TB
-    A(["PROPERTY BUYER / RENTER<br/>Submits a property inquiry"])
-    B["LEAD INTAKE<br/>Agency form or connected lead source<br/>Name • Contact • Property requirements"]
-    C["n8n WEBHOOK<br/>Receive inquiry"]
-    D{"DATA VALIDATION<br/>Are required details present?"}
-    X(["INVALID INQUIRY<br/>Stop processing"])
+    A(["CUSTOMER<br/>Submits inquiry"]) --> B["n8n WEBHOOK<br/>Receive lead data"]
+    B --> C{"VALIDATION<br/>Are required fields present?"}
 
-    E["PROPERTY REQUIREMENTS<br/>Normalize property type • Area • Budget<br/>Buy / Rent • Preferred timeline"]
-    F["GROQ AI QUALIFICATION<br/>Understand intent and buying readiness"]
-    G["STRUCTURED AI RESULT<br/>HOT / WARM / COLD<br/>Reason + inquiry summary"]
-    H["MERGE LEAD RECORD<br/>Customer details + property needs + AI result"]
-    I[("GOOGLE SHEETS<br/>Create lead record<br/>Unique Lead ID • Initial status: Pending")]
-    J{"LEAD ROUTING<br/>AI classification"}
+    C -->|No| X(["STOP<br/>Invalid submission"])
+    C -->|Yes| D["GROQ AI CLASSIFICATION<br/>Analyze inquiry and buying intent"]
+    D --> E["STRUCTURED OUTPUT<br/>Category: HOT / WARM / COLD<br/>Reason for classification"]
+    E --> F["MERGE LEAD DATA<br/>Combine customer details + AI result"]
+    F --> G[("GOOGLE SHEETS<br/>Append a new lead record<br/>Generate unique Lead ID<br/>Initial status: Pending")]
+    G --> H{"CLASSIFICATION ROUTER<br/>Which category was assigned?"}
 
-    K["COLD LEAD<br/>Update status: Not Required"]
-    K1(["COLD COMPLETE<br/>No approval • No email"])
+    H -->|COLD| I["COLD ROUTE<br/>Update status: Not Required"]
+    I --> J(["COLD COMPLETE<br/>No approval • No email"])
 
-    L["HOT / WARM LEAD<br/>Send to human review"]
-    M{"AGENT / MANAGER<br/>Approval decision"}
+    H -->|HOT or WARM| K["HUMAN REVIEW<br/>Wait for approval decision"]
+    K --> L{"APPROVAL DECISION"}
 
-    N["REJECTED<br/>Update matching Lead ID<br/>Status: Rejected"]
-    N1(["CLOSED<br/>No email sent"])
+    L -->|Reject| M["REJECTION PATH<br/>Update matching Lead ID<br/>Status: Rejected"]
+    M --> N(["REJECTED<br/>No email sent"])
 
-    O["APPROVED<br/>Update matching Lead ID<br/>Status: Approved"]
-    P["GROQ AI FOLLOW-UP<br/>Draft a personalized property inquiry reply"]
-    Q["GMAIL<br/>Send approved response"]
-    R(["FOLLOW-UP SENT<br/>Lead record remains tracked"])
-
-    A --> B --> C --> D
-    D -->|No| X
-    D -->|Yes| E --> F --> G --> H --> I --> J
-    J -->|COLD| K --> K1
-    J -->|HOT or WARM| L --> M
-    M -->|Reject| N --> N1
-    M -->|Approve| O --> P --> Q --> R
+    L -->|Approve| O["APPROVAL PATH<br/>Update matching Lead ID<br/>Status: Approved"]
+    O --> P["GROQ AI EMAIL GENERATION<br/>Create a personalized reply"]
+    P --> Q["GMAIL DELIVERY<br/>Send email to the customer"]
+    Q --> R(["APPROVED & RESPONDED<br/>Email sent"])
 
     classDef source fill:#eaf2ff,stroke:#4778b8,color:#17365d,stroke-width:1.5px
     classDef process fill:#f4f6f8,stroke:#7b8794,color:#202b36,stroke-width:1.3px
@@ -51,81 +40,59 @@ flowchart TB
     classDef approve fill:#eaf6ee,stroke:#4b9566,color:#1c4b2d,stroke-width:1.5px
     classDef finish fill:#f5f5f5,stroke:#737d87,color:#26313a,stroke-width:1.3px
 
-    class A,B,C source
-    class D,J,M decision
-    class E,H,L process
-    class F,G,P ai
-    class I data
-    class K cold
-    class N reject
+    class A,B source
+    class C,H,L decision
+    class D,E,P ai
+    class F,K process
+    class G data
+    class I cold
+    class M reject
     class O,Q approve
-    class X,K1,N1,R finish
+    class X,J,N,R finish
 ```
 
-## How the Real Estate Workflow Works
+## Workflow Stages
 
-1. **Capture the inquiry:** A buyer or renter submits their contact details and property requirements through the agency's form or a connected lead source.
-2. **Validate the submission:** n8n checks that the required information is present before processing.
-3. **Understand property needs:** The client intake is organized around property type, preferred area, budget, buying or renting intent, and expected timeline. The exact fields are agreed with the agency.
-4. **Qualify with AI:** Groq analyzes the inquiry and returns a structured HOT, WARM or COLD category with a reason and concise summary.
-5. **Save the lead:** Customer information and AI output are combined and saved in Google Sheets with a unique Lead ID and an initial Pending status.
-6. **Route the lead:**
-   - **HOT / WARM:** Sent for agent or manager review. The workflow waits for an approval decision.
-   - **COLD:** Updated to Not Required and exits without approval or automated email.
-7. **Apply the decision:**
-   - **Reject:** Update the matching Lead ID to Rejected. No email is sent.
-   - **Approve:** Update the matching Lead ID to Approved and continue.
-8. **Send the response:** Groq drafts a personalized reply based on the inquiry. Gmail sends it after approval.
+1. **Lead reception:** The n8n Webhook receives the customer's name, email, budget and inquiry message.
+2. **Validation:** Required fields are checked. Invalid submissions stop before AI classification.
+3. **AI classification:** Groq analyzes the inquiry and returns a structured category (HOT, WARM or COLD) with a reason.
+4. **Lead record creation:** Customer data and AI output are combined. Google Sheets stores the lead with a unique Lead ID and an initial Pending status.
+5. **Category routing:**
+   - **HOT / WARM:** The workflow pauses and waits for a human decision.
+   - **COLD:** The record is updated to Not Required and finishes without approval or email.
+6. **Human decision:**
+   - **Reject:** The matching record is updated to Rejected. No email is sent.
+   - **Approve:** The matching record is updated to Approved, then the workflow continues to email generation.
+7. **Email delivery:** Groq generates a personalized reply and Gmail sends it to the customer after approval.
 
-## Client Configuration
-
-The core workflow can be reused, while each real estate agency receives its own configuration:
-
-| Configuration | Example |
-|---|---|
-| Property type | Apartment, house, plot, commercial |
-| Inquiry intent | Buying, renting, selling, investment |
-| Preferred area | Agency's supported locations |
-| Budget | Client's currency and price ranges |
-| Buying / rental timeline | Immediate, within 1–3 months, researching |
-| Lead source | Agency website form or agreed connected source |
-| Lead database | Dedicated client Google Sheet |
-| Email delivery | Client-authorized Gmail account |
-| Approval owner | Assigned agent or sales manager |
-
-The property-specific fields above are the real-estate deployment configuration. They should be added to the intake form, validation and AI prompt when adapting the reusable workflow for a client.
-
-## Core Components
+## Main Components
 
 | Component | Responsibility |
 |---|---|
-| Lead form / connected source | Collects property inquiry details |
-| n8n Webhook | Receives the inquiry |
-| Validation | Checks required fields |
-| Groq AI + Structured Output Parser | Classifies the inquiry and returns structured information |
-| Merge | Combines lead data and AI result |
+| n8n Webhook | Receives customer lead submissions |
+| Validation (IF) | Checks required customer fields |
+| Groq AI + Structured Output Parser | Classifies the lead and returns structured output |
+| Merge | Combines original lead details with the AI result |
 | Google Sheets | Stores each inquiry, unique Lead ID, category and status |
 | Switch | Routes HOT, WARM and COLD leads |
-| Wait + approval logic | Pauses HOT/WARM leads for agent review |
-| Groq AI email generation | Drafts a personalized follow-up |
+| Wait + approval logic | Pauses HOT/WARM leads for human review |
+| Groq AI email generation | Creates the personalized customer reply |
 | Gmail | Sends the approved email |
 
-## Lead Status and Control Rules
+## Data and Routing Rules
 
-- Each inquiry receives a unique Lead ID. Repeat inquiries from the same contact remain separate records.
-- New inquiries are saved with status **Pending**.
-- Updates target the matching Lead ID, not every row with the same email address.
-- HOT and WARM leads wait for a human decision.
+- Each inquiry receives its own unique Lead ID, so repeat inquiries from the same email address remain separate records.
+- Google Sheets is updated using the unique Lead ID, not the customer's email address.
+- New lead records are stored with the initial status **Pending**.
+- HOT and WARM leads wait for a human approval decision.
 - COLD leads are marked **Not Required** and bypass approval.
 - Rejected leads are marked **Rejected** and do not trigger an email.
 - Only approved leads proceed to AI email generation and Gmail delivery.
 
-## Security and Client Isolation
+## Security Considerations
 
-- Use a separate client configuration and dedicated data destination for each agency.
-- Connect each agency's own Google and email accounts using securely stored credentials.
-- Never share customer records, credentials, approval tokens or webhook URLs between clients.
-- Keep API credentials in n8n credentials; do not commit secrets or private customer data to this repository.
-- Protect webhook and approval endpoints with authentication.
-- Restrict access to client sheets and execution history.
-- Test failure paths and confirm client authorization before going live.
+- Keep API credentials inside n8n credentials; never commit secrets to this repository.
+- Do not publish production webhook URLs, approval tokens, resume URLs or private customer data.
+- Protect approval endpoints with authentication and rotate any credential that may have been exposed.
+- Restrict access to connected Google Sheets and Gmail accounts.
+- Review execution logs and test failure paths before production use.
