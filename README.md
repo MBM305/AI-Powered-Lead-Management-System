@@ -64,6 +64,12 @@ Pauses HOT and WARM leads until a human approves or rejects them. Updates the co
 ### 06 — AI Email Generation & Delivery
 After approval, Groq generates a personalized email and Gmail sends it to the customer.
 
+## System Architecture Diagram
+
+The complete workflow architecture, including AI classification, lead routing, human approval and email delivery, is documented here:
+
+[View the System Architecture Diagram](Documentation/architecture.md)
+
 ## Testing Performed
 
 - Valid lead submission.
