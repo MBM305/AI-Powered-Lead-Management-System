@@ -66,9 +66,9 @@ After approval, Groq generates a personalized email and Gmail sends it to the cu
 
 ## System Architecture Diagram
 
-Explore the complete technical documentation for the end-to-end workflow, including HOT / WARM / COLD classification, Google Sheets record updates, human approval and rejection paths, and approved email delivery.
+The architecture documentation explains how the lead-management workflow can be configured for real estate agencies, including property inquiry intake, buyer / renter qualification, HOT / WARM / COLD routing, agent approval, lead tracking and approved email follow-up.
 
-**[Open the System Architecture Documentation](Documentation/architecture.md)**
+**[View the Real Estate Lead Management Architecture](Documentation/architecture.md)**
 
 ## Testing Performed
 
