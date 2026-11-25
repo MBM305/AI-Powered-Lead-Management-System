@@ -1,84 +1,98 @@
 # System Architecture
 
-This page shows the actual lead-processing path from customer submission to the final outcome. The diagram is kept intentionally linear so each connection is easy to follow.
+This document explains the complete lead-management workflow, from the first customer submission to each possible outcome. The diagram separates the common processing stages from the COLD and human-approval routes so the decisions and connections are easy to trace.
 
 ## End-to-End Workflow
 
 ```mermaid
-%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 42, "rankSpacing": 58}}}%%
-flowchart LR
-    A(["Customer<br/>submits lead"]) --> B["n8n Webhook"]
-    B --> C{"Required fields<br/>valid?"}
+flowchart TB
+    A(["CUSTOMER<br/>Submits inquiry"]) --> B["n8n WEBHOOK<br/>Receive lead data"]
+    B --> C{"VALIDATION<br/>Are required fields present?"}
 
-    C -->|No| X(["Stop<br/>Invalid lead"])
-    C -->|Yes| D["Groq AI<br/>Classify lead"]
-    D --> E["Structured output<br/>HOT · WARM · COLD"]
-    E --> F["Merge lead data<br/>with AI result"]
-    F --> G[("Google Sheets<br/>Append lead + unique ID<br/>Initial status: Pending")]
-    G --> H{"Lead<br/>category?"}
+    C -->|No| X(["STOP<br/>Invalid submission"])
+    C -->|Yes| D["GROQ AI CLASSIFICATION<br/>Analyze inquiry and buying intent"]
+    D --> E["STRUCTURED OUTPUT<br/>Category: HOT / WARM / COLD<br/>Reason for classification"]
+    E --> F["MERGE LEAD DATA<br/>Combine customer details + AI result"]
+    F --> G[("GOOGLE SHEETS<br/>Append a new lead record<br/>Generate unique Lead ID<br/>Initial status: Pending")]
+    G --> H{"CLASSIFICATION ROUTER<br/>Which category was assigned?"}
 
-    H -->|COLD| I["Update status<br/>Not Required"]
-    I --> J(["Finished<br/>No email"])
+    H -->|COLD| I["COLD ROUTE<br/>Update status: Not Required"]
+    I --> J(["COLD COMPLETE<br/>No approval • No email"])
 
-    H -->|HOT or WARM| K["Wait for<br/>human decision"]
-    K --> L{"Approval<br/>decision?"}
+    H -->|HOT or WARM| K["HUMAN REVIEW<br/>Wait for approval decision"]
+    K --> L{"APPROVAL DECISION"}
 
-    L -->|Reject| M["Update matching row<br/>Status: Rejected"]
-    M --> N(["Finished<br/>No email"])
+    L -->|Reject| M["REJECTION PATH<br/>Update matching Lead ID<br/>Status: Rejected"]
+    M --> N(["REJECTED<br/>No email sent"])
 
-    L -->|Approve| O["Update matching row<br/>Status: Approved"]
-    O --> P["Groq AI<br/>Generate email"]
-    P --> Q["Gmail<br/>Send personalized email"]
-    Q --> R(["Finished<br/>Email sent"])
+    L -->|Approve| O["APPROVAL PATH<br/>Update matching Lead ID<br/>Status: Approved"]
+    O --> P["GROQ AI EMAIL GENERATION<br/>Create a personalized reply"]
+    P --> Q["GMAIL DELIVERY<br/>Send email to the customer"]
+    Q --> R(["APPROVED & RESPONDED<br/>Email sent"])
 
-    classDef input fill:#edf4ff,stroke:#5279ad,color:#172b4d,stroke-width:1.5px
-    classDef ai fill:#f3edff,stroke:#8665b5,color:#35204f,stroke-width:1.5px
-    classDef storage fill:#eaf5ee,stroke:#4e8b67,color:#193c29,stroke-width:1.5px
-    classDef decision fill:#fff5e3,stroke:#c28b35,color:#50380e,stroke-width:1.5px
-    classDef outcome fill:#f1f3f5,stroke:#778391,color:#27323c,stroke-width:1.3px
+    classDef source fill:#eaf2ff,stroke:#4778b8,color:#17365d,stroke-width:1.5px
+    classDef process fill:#f4f6f8,stroke:#7b8794,color:#202b36,stroke-width:1.3px
+    classDef ai fill:#f1eaff,stroke:#8560b3,color:#392052,stroke-width:1.5px
+    classDef data fill:#e8f5ec,stroke:#4b8b61,color:#1d472b,stroke-width:1.5px
+    classDef decision fill:#fff4df,stroke:#c18a2f,color:#563b0d,stroke-width:1.5px
+    classDef cold fill:#edf3f7,stroke:#6c8799,color:#263e4d,stroke-width:1.5px
+    classDef reject fill:#fff0ef,stroke:#bf6a62,color:#5b2622,stroke-width:1.5px
+    classDef approve fill:#eaf6ee,stroke:#4b9566,color:#1c4b2d,stroke-width:1.5px
+    classDef finish fill:#f5f5f5,stroke:#737d87,color:#26313a,stroke-width:1.3px
 
-    class B,C,F,K,O,M input
+    class A,B source
+    class C,H,L decision
     class D,E,P ai
-    class G storage
-    class H,L decision
-    class A,X,J,N,R,I,Q outcome
+    class F,K process
+    class G data
+    class I cold
+    class M reject
+    class O,Q approve
+    class X,J,N,R finish
 ```
 
-## How the Workflow Operates
+## Workflow Stages
 
-1. **Receive and validate:** The n8n Webhook receives the inquiry. Required fields are checked before processing continues.
-2. **Classify with AI:** Groq analyzes the inquiry and returns a structured HOT, WARM, or COLD category with a reason.
-3. **Create the lead record:** The original lead data and AI result are merged and appended to Google Sheets. Each inquiry receives its own unique Lead ID.
-4. **Route by category:**
-   - **HOT / WARM:** The record remains Pending while the workflow waits for a human approval decision.
-   - **COLD:** The record is marked Not Required and finishes without entering the approval or email path.
-5. **Apply the human decision:** The matching Google Sheets row is updated by its unique Lead ID. Rejected leads finish without an email.
-6. **Send the approved response:** Only an approved lead proceeds to AI email generation and Gmail delivery.
+1. **Lead reception:** The n8n Webhook receives the customer's name, email, budget and inquiry message.
+2. **Validation:** Required fields are checked. Invalid submissions stop before AI classification.
+3. **AI classification:** Groq analyzes the inquiry and returns a structured category (HOT, WARM or COLD) with a reason.
+4. **Lead record creation:** Customer data and AI output are combined. Google Sheets stores the lead with a unique Lead ID and an initial Pending status.
+5. **Category routing:**
+   - **HOT / WARM:** The workflow pauses and waits for a human decision.
+   - **COLD:** The record is updated to Not Required and finishes without approval or email.
+6. **Human decision:**
+   - **Reject:** The matching record is updated to Rejected. No email is sent.
+   - **Approve:** The matching record is updated to Approved, then the workflow continues to email generation.
+7. **Email delivery:** Groq generates a personalized reply and Gmail sends it to the customer after approval.
 
 ## Main Components
 
 | Component | Responsibility |
 |---|---|
-| n8n | Orchestrates the workflow and connects the services |
-| Webhook | Receives customer lead submissions |
-| Groq AI | Classifies leads and generates personalized email content |
-| Structured Output Parser | Structures the AI classification result |
-| Google Sheets | Stores lead details, category, unique ID, and status |
-| Wait / approval logic | Pauses HOT and WARM leads for human review |
-| Gmail | Sends the email after approval |
+| n8n Webhook | Receives customer lead submissions |
+| Validation (IF) | Checks required customer fields |
+| Groq AI + Structured Output Parser | Classifies the lead and returns structured output |
+| Merge | Combines original lead details with the AI result |
+| Google Sheets | Stores each inquiry, unique Lead ID, category and status |
+| Switch | Routes HOT, WARM and COLD leads |
+| Wait + approval logic | Pauses HOT/WARM leads for human review |
+| Groq AI email generation | Creates the personalized customer reply |
+| Gmail | Sends the approved email |
 
-## Important Data and Control Rules
+## Data and Routing Rules
 
-- Every inquiry receives a unique Lead ID. Multiple inquiries from the same email address are stored as separate records.
-- Approval and rejection update the row matching that Lead ID, not every row with the same email address.
-- HOT and WARM leads require human approval.
-- COLD leads bypass human approval and are marked Not Required.
-- The automated email is sent only after approval.
+- Each inquiry receives its own unique Lead ID, so repeat inquiries from the same email address remain separate records.
+- Google Sheets is updated using the unique Lead ID, not the customer's email address.
+- New lead records are stored with the initial status **Pending**.
+- HOT and WARM leads wait for a human approval decision.
+- COLD leads are marked **Not Required** and bypass approval.
+- Rejected leads are marked **Rejected** and do not trigger an email.
+- Only approved leads proceed to AI email generation and Gmail delivery.
 
 ## Security Considerations
 
-- Store API credentials in n8n credentials; never commit secrets to this repository.
-- Do not publish production webhook URLs, approval tokens, or private customer data.
+- Keep API credentials inside n8n credentials; never commit secrets to this repository.
+- Do not publish production webhook URLs, approval tokens, resume URLs or private customer data.
 - Protect approval endpoints with authentication and rotate any credential that may have been exposed.
 - Restrict access to connected Google Sheets and Gmail accounts.
 - Review execution logs and test failure paths before production use.
