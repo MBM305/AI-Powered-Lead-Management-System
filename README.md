@@ -35,7 +35,7 @@ This automation reduces manual work and creates a structured lead management pro
 5. Automatic Google Sheets storage.
 6. Intelligent lead routing.
 7. Human approval and rejection system.
-8. Secure approval endpoint using Header Authentication.
+8. Approval endpoint using Header Authentication.
 9. AI-generated personalized emails.
 10. Gmail email delivery after approval.
 11. Automatic retry settings for selected AI and Google Sheets nodes.
@@ -115,3 +115,11 @@ AI Automation | Lead Management | Workflow Automation | Human-in-the-Loop AI
 
 ### 4. Gmail Confirmation
 ![Gmail Confirmation](Screenshots/03-gmail-confirmation.png)
+
+## Contact
+
+Interested in working together or need an AI automation solution? Feel free to contact me.
+
+- **WhatsApp:** [Chat with me](https://wa.me/923213490887)
+
+Open to freelance projects, collaborations and automation opportunities.
