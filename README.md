@@ -121,5 +121,6 @@ AI Automation | Lead Management | Workflow Automation | Human-in-the-Loop AI
 Interested in working together or need an AI automation solution? Feel free to contact me.
 
 - **WhatsApp:** [Chat with me](https://wa.me/923213490887)
+- **Email:** [mbm28204@gmail.com](mailto:mbm28204@gmail.com)
 
 Open to freelance projects, collaborations and automation opportunities.
