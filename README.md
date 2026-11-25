@@ -66,9 +66,9 @@ After approval, Groq generates a personalized email and Gmail sends it to the cu
 
 ## System Architecture Diagram
 
-The complete workflow architecture, including AI classification, lead routing, human approval and email delivery, is documented here:
+Explore the complete technical documentation for the end-to-end workflow, including HOT / WARM / COLD classification, Google Sheets record updates, human approval and rejection paths, and approved email delivery.
 
-[View the System Architecture Diagram](Documentation/architecture.md)
+**[Open the System Architecture Documentation](Documentation/architecture.md)**
 
 ## Testing Performed
 
