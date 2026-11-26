@@ -1,138 +1,119 @@
-# Project 01 — AI-Powered Lead Management System
+# AI-Powered Lead Management System
 
-## Project Overview
+An AI-assisted lead qualification and follow-up workflow built with **n8n, Groq, Google Sheets and Gmail**. It receives customer inquiries, validates required fields, classifies buying intent, routes leads for human review and sends an AI-generated reply only after approval.
 
-An AI-powered lead management automation system built with n8n. It automatically receives customer inquiries, analyzes their buying intent, categorizes leads, manages human approval, stores customer information and sends personalized emails to approved leads.
+## Project at a glance
 
-## Problem It Solves
-
-Businesses often manage customer inquiries manually. This can lead to:
-- Slow lead responses.
-- Missed sales opportunities.
-- Poor lead prioritization.
-- Repetitive administrative work.
-- Disorganized customer records.
-
-This automation reduces manual work and creates a structured lead management process.
-
-## Technologies Used
-
-| Technology | Purpose |
+| | |
 |---|---|
-| n8n | Workflow automation |
-| Groq AI | AI-powered lead classification and email generation |
-| Google Sheets | Lead database and status tracking |
-| Gmail | Personalized email delivery |
-| Webhooks | Receive leads and approval decisions |
-| Structured Output Parser | Structured AI classification |
+| **Category** | AI Automation · Lead Management · Human-in-the-Loop |
+| **Automation** | n8n |
+| **AI** | Groq |
+| **Lead records** | Google Sheets |
+| **Email delivery** | Gmail |
+| **Input** | n8n Webhook |
+| **Demo** | [Watch the 1 min 28 sec walkthrough](Demo/AI_Lead_Management_Demo.mp4) |
 
-## Main Features
+## Demo
 
-1. Automatic lead collection through webhooks.
-2. Required-field validation.
-3. AI classification into HOT, WARM and COLD.
-4. Unique Lead ID generation.
-5. Automatic Google Sheets storage.
-6. Intelligent lead routing.
-7. Human approval and rejection system.
-8. Approval endpoint using Header Authentication.
-9. AI-generated personalized emails.
-10. Gmail email delivery after approval.
-11. Automatic retry settings for selected AI and Google Sheets nodes.
+[![Watch the project walkthrough](Screenshots/00-workflow-overview.png)](Demo/AI_Lead_Management_Demo.mp4)
 
-## Workflow Architecture
+**[Watch the narrated video walkthrough](Demo/AI_Lead_Management_Demo.mp4)** · [Demo details](Demo/README.md)
 
-### 01 — Lead Reception & Validation
-Receives customer information and checks required fields.
+The walkthrough shows lead intake, AI classification, approval routing, Google Sheets status tracking and Gmail follow-up.
 
-### 02 — AI Lead Classification
-Groq AI analyzes customer inquiries and assigns a HOT, WARM or COLD category.
+## What it does
 
-### 03 — Lead Data Management
-Combines original customer information with AI classification and stores the complete record in Google Sheets.
+1. **Receives inquiries** through an n8n webhook.
+2. **Validates required fields** before sending data to the AI model.
+3. **Classifies buying intent** as HOT, WARM or COLD and returns a reason using structured AI output.
+4. **Creates a unique Lead ID** and stores the lead and classification in Google Sheets with an initial `Pending` status.
+5. **Routes the lead** according to its classification:
+   - **HOT / WARM:** pauses for a human approval decision.
+   - **COLD:** updates the record to `Not Required` and ends without sending an email.
+6. **Handles the human decision:**
+   - **Approve:** updates the matching record to `Approved`, generates a personalized reply with Groq and sends it through Gmail.
+   - **Reject:** updates the matching record to `Rejected` and does not send an email.
 
-### 04 — Intelligent Lead Routing
-Routes leads based on their AI classification.
+## Workflow architecture
 
-- HOT: Human approval required.
-- WARM: Human approval required.
-- COLD: Stored as Not Required; skips approval.
+The diagram below shows the implemented workflow at a logical level. The unique Lead ID is generated in the workflow before the Google Sheets append operation.
 
-### 05 — Human Approval System
-Pauses HOT and WARM leads until a human approves or rejects them. Updates the corresponding Google Sheets record using its unique Lead ID.
+[**Read the detailed architecture and routing documentation**](Documentation/architecture.md)
 
-### 06 — AI Email Generation & Delivery
-After approval, Groq generates a personalized email and Gmail sends it to the customer.
+## Technology stack
 
-## System Architecture Diagram
+| Technology | Role |
+|---|---|
+| n8n | Workflow orchestration, webhooks, validation, routing and approval wait |
+| Groq | Lead classification and personalized email generation |
+| Structured Output Parser | Enforces a structured classification result |
+| Google Sheets | Lead records and status tracking |
+| Gmail | Sends approved customer follow-ups |
 
-Explore the complete technical documentation for the end-to-end workflow, including HOT / WARM / COLD classification, Google Sheets record updates, human approval and rejection paths, and approved email delivery.
+## Validation and test coverage
 
-**[Open the System Architecture Documentation](Documentation/architecture.md)**
-
-## Project Demo
-
-A narrated walkthrough is provided in the Demo folder. It demonstrates the workflow from lead intake and AI classification through human approval, Google Sheets tracking and Gmail follow-up.
-
-**[Open the Demo Documentation](Demo/README.md)**
-
-## Testing Performed
+The workflow has been manually tested for the following scenarios:
 
 - Valid lead submission.
-- Missing name validation.
-- Missing email validation.
-- Missing message validation.
-- Missing budget validation.
-- Zero-budget lead acceptance.
-- HOT and WARM classification routes.
-- COLD lead routing.
-- Approval and rejection.
+- Missing name, email, message or budget.
+- Zero-budget submission.
+- HOT, WARM and COLD routing.
+- HOT / WARM approval and rejection.
+- COLD status update without approval or email.
 - Unique Lead ID generation.
 - Multiple inquiries from the same email address.
-- Correct Google Sheets row updates.
-- Gmail delivery after approval.
+- Updating the correct Google Sheets row by Lead ID.
+- AI-generated Gmail delivery after approval.
 
-## Business Value
+These are documented manual workflow tests, not an automated software test suite.
 
-This system helps businesses:
-- Prioritize promising sales opportunities.
-- Reduce repetitive manual work.
-- Organize customer inquiries.
-- Improve response efficiency.
-- Maintain structured lead records.
-- Keep human control over important sales decisions.
+## Repository contents
 
-## Project Status
+```text
+.
+├── README.md
+├── Demo/
+│   ├── README.md
+│   └── AI_Lead_Management_Demo.mp4
+├── Documentation/
+│   ├── architecture.md
+│   └── security-and-deployment.md
+└── Screenshots/
+    ├── 00-workflow-overview.png
+    ├── 01-successful-execution.png
+    ├── 02-google-sheets.png
+    └── 03-gmail-confirmation.png
+```
 
-Core workflow implemented and tested. Further production hardening, expanded failure notifications and additional edge-case testing can be added in future versions.
+## Screenshots
 
-## Security Notes
+### Workflow overview
+![Workflow overview](Screenshots/00-workflow-overview.png)
 
-API credentials, webhook URLs, approval tokens and private customer information must never be published in the public repository.
+### Successful execution
+![Successful execution](Screenshots/01-successful-execution.png)
 
-## Project Type
+### Google Sheets lead record
+![Google Sheets lead record](Screenshots/02-google-sheets.png)
 
-AI Automation | Lead Management | Workflow Automation | Human-in-the-Loop AI
+### Gmail confirmation
+![Gmail confirmation](Screenshots/03-gmail-confirmation.png)
 
-## Project Screenshots
+## Project status and scope
 
-### 1. Workflow Overview
-![Workflow Overview](Screenshots/00-workflow-overview.png)
+The core workflow is implemented and has passed the manual scenarios listed above. This repository contains its documentation, screenshots and narrated demonstration; it does **not** currently include a sanitized, importable n8n workflow export or a one-click deployment package.
 
-### 2. Successful Execution
-![Successful Execution](Screenshots/01-successful-execution.png)
+The project is a working portfolio demonstration, not a production-ready multi-tenant service. Before using it with a business, configure that client's fields, prompts, credentials, Google Sheet and email content; review the security checklist; and test failure handling in the target environment.
 
-### 3. Google Sheets Lead Record
-![Google Sheets](Screenshots/02-google-sheets.png)
+**Current integration scope:** webhook-based lead intake, Groq, Google Sheets, n8n human approval and Gmail. Direct Facebook Lead Ads, WhatsApp, property portals, CRM integrations, centralized alerting and multi-client isolation are not included in this version.
 
-### 4. Gmail Confirmation
-![Gmail Confirmation](Screenshots/03-gmail-confirmation.png)
+See [Security and Deployment Checklist](Documentation/security-and-deployment.md) for the pre-deployment review.
 
 ## Contact
 
-Interested in working together or need an AI automation solution? Feel free to contact me.
+For freelance automation projects, collaboration or questions:
 
-- **WhatsApp:** [Chat with me](https://wa.me/923213490887)
 - **Email:** [mbm28204@gmail.com](mailto:mbm28204@gmail.com)
+- **WhatsApp:** [Chat with me](https://wa.me/923213490887)
 
-Open to freelance projects, collaborations and automation opportunities.
