@@ -70,6 +70,12 @@ Explore the complete technical documentation for the end-to-end workflow, includ
 
 **[Open the System Architecture Documentation](Documentation/architecture.md)**
 
+## Project Demo
+
+A narrated walkthrough is provided in the Demo folder. It demonstrates the workflow from lead intake and AI classification through human approval, Google Sheets tracking and Gmail follow-up.
+
+**[Open the Demo Documentation](Demo/README.md)**
+
 ## Testing Performed
 
 - Valid lead submission.
