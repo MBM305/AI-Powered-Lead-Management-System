@@ -1,23 +1,32 @@
 # Project Demo
 
-This folder contains the recorded walkthrough of the **AI-Powered Lead Management System**.
+A narrated walkthrough of the **AI-Powered Lead Management System**.
 
-## Video Walkthrough
+## Watch the video
 
-**[Watch the demo video](AI_Lead_Management_Demo.mp4)**
+[**Open the demo video (MP4)**](AI_Lead_Management_Demo.mp4)
 
-- **File:** `AI_Lead_Management_Demo.mp4`
-- **Duration:** Approximately 1 minute 28 seconds
-- **Format:** MP4 (1920 × 1080)
+| Detail | Value |
+|---|---|
+| File | `AI_Lead_Management_Demo.mp4` |
+| Duration | Approximately 1 minute 28 seconds |
+| Resolution | 1920 × 1080 |
+| Format | MP4 with narrated voice-over |
 
-The walkthrough demonstrates:
+## What the walkthrough demonstrates
 
 1. Lead intake and required-field validation.
 2. AI classification into HOT, WARM and COLD.
-3. Lead routing and human approval for HOT and WARM leads.
+3. Routing and human approval for HOT and WARM leads.
 4. Lead records and approval statuses in Google Sheets.
-5. AI-generated follow-up email delivery through Gmail.
+5. AI-generated follow-up email delivery through Gmail after approval.
 
-## Security Note
+## Related project resources
 
-This folder contains the public-facing demo only. Do not upload workflow exports containing credentials, webhook URLs, approval tokens, private customer information or other secrets.
+- [Main project overview](../README.md)
+- [System architecture](../Documentation/architecture.md)
+- [Security and deployment checklist](../Documentation/security-and-deployment.md)
+
+## Public demo safety
+
+This folder is intended for the final public-facing demonstration only. Do not upload workflow exports containing credentials, webhook URLs, approval tokens, Wait resume URLs or private customer information.
